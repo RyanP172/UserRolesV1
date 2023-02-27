@@ -1,0 +1,40 @@
+dotnet new mvc -o UserRoles
+code -r UserRoles
+dotnet dev-certs https --trust
+
+
+original string: "MasterContext": "Server=.\\SQLExpress;Database=master;Trusted_Connection=True;Trust Server Certificate=true;"
+
+dotnet ef migrations add InitialCreate
+dotnet watch --no-hot-reload
+
+public class User
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+
+    public virtual ICollection<Role> Roles { get; set; }
+}
+
+public class Role
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+
+    public virtual ICollection<User> Users { get; set; }
+}
+
+
+public ActionResult GetUserRoles(int userId)
+{
+    var user = db.Users.Include(u => u.Roles).SingleOrDefault(u => u.Id == userId);
+
+    if (user == null)
+    {
+        return HttpNotFound();
+    }
+
+    var roleNames = user.Roles.Select(r => r.Name);
+
+    return Json(roleNames, JsonRequestBehavior.AllowGet);
+}
